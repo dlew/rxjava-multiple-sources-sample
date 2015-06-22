@@ -30,7 +30,9 @@ public class Sources {
 
     public Observable<Data> memory() {
         Observable<Data> observable = Observable.create(subscriber -> {
-            subscriber.onNext(memory);
+            if(memory != null && memory.isUpToDate()){
+                subscriber.onNext(memory);
+            }
             subscriber.onCompleted();
         });
 
@@ -39,7 +41,9 @@ public class Sources {
 
     public Observable<Data> disk() {
         Observable<Data> observable = Observable.create(subscriber -> {
-            subscriber.onNext(disk);
+            if(disk != null && disk.isUpToDate()){
+                subscriber.onNext(disk);
+            }
             subscriber.onCompleted();
         });
 
