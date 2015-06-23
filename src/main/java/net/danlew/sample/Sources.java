@@ -1,5 +1,6 @@
 package net.danlew.sample;
 
+import com.google.common.base.Optional;
 import rx.Observable;
 
 /**
@@ -28,48 +29,48 @@ public class Sources {
         memory = null;
     }
 
-    public Observable<Data> memory() {
-        Observable<Data> observable = Observable.create(subscriber -> {
-            subscriber.onNext(memory);
+    public Observable<Optional<Data>> memory() {
+        Observable<Optional<Data>> observable = Observable.create(subscriber -> {
+            subscriber.onNext(Optional.fromNullable(memory));
             subscriber.onCompleted();
         });
 
         return observable.compose(logSource("MEMORY"));
     }
 
-    public Observable<Data> disk() {
-        Observable<Data> observable = Observable.create(subscriber -> {
-            subscriber.onNext(disk);
+    public Observable<Optional<Data>> disk() {
+        Observable<Optional<Data>> observable = Observable.create(subscriber -> {
+            subscriber.onNext(Optional.fromNullable(disk));
             subscriber.onCompleted();
         });
 
         // Cache disk responses in memory
-        return observable.doOnNext(data -> memory = data)
+        return observable.doOnNext(data -> memory = data.orNull())
             .compose(logSource("DISK"));
     }
 
-    public Observable<Data> network() {
-        Observable<Data> observable = Observable.create(subscriber -> {
+    public Observable<Optional<Data>> network() {
+        Observable<Optional<Data>> observable = Observable.create(subscriber -> {
             requestNumber++;
-            subscriber.onNext(new Data("Server Response #" + requestNumber));
+            subscriber.onNext(Optional.of(new Data("Server Response #" + requestNumber)));
             subscriber.onCompleted();
         });
 
         // Save network responses to disk and cache in memory
         return observable.doOnNext(data -> {
-                disk = data;
-                memory = data;
+                disk = data.get();
+                memory = data.get();
             })
             .compose(logSource("NETWORK"));
     }
 
     // Simple logging to let us know what each source is returning
-    Observable.Transformer<Data, Data> logSource(final String source) {
+    Observable.Transformer<Optional<Data>, Optional<Data>> logSource(final String source) {
         return dataObservable -> dataObservable.doOnNext(data -> {
-            if (data == null) {
+            if (!data.isPresent()) {
                 System.out.println(source + " does not have any data.");
             }
-            else if (!data.isUpToDate()) {
+            else if (!data.get().isUpToDate()) {
                 System.out.println(source + " has stale data.");
             }
             else {

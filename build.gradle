@@ -10,6 +10,7 @@ repositories {
 
 dependencies {
     compile 'io.reactivex:rxjava:1.0.12'
+    compile 'com.google.guava:guava:18.0'
 }
 
 task run(type:JavaExec) {

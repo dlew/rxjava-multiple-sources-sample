@@ -15,7 +15,8 @@ public class Sample {
                 sources.disk(),
                 sources.network()
             )
-            .first(data -> data != null && data.isUpToDate());
+            .first(data -> data.isPresent() && data.get().isUpToDate())
+            .map(data -> data.get());
 
         // "Request" latest data once a second
         Observable.interval(1, TimeUnit.SECONDS)
